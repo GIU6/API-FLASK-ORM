@@ -3,8 +3,7 @@ from . import app, db
 from .models import Cliente
 from .utils import generar_codigo
 
-# -------------------------------
-# Registro
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -15,19 +14,18 @@ def register():
     if not nombre or not email or not password:
         return jsonify({'msg': 'Faltan datos'}), 400
 
-    # Verificar si el cliente ya existe
+  
     if Cliente.query.filter_by(email=email).first():
         return jsonify({'msg': 'Email ya registrado'}), 400
 
-    # Crear cliente y guardar en DB
+
     cliente = Cliente(nombre=nombre, email=email, password=password)
     db.session.add(cliente)
     db.session.commit()
 
     return jsonify({'msg': 'Cliente registrado'}), 201
 
-# -------------------------------
-# Login
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -40,8 +38,6 @@ def login():
 
     return jsonify({'msg': f'Bienvenido {cliente.nombre}'})
 
-# -------------------------------
-# Generar código
 @app.route('/generar_codigo', methods=['POST'])
 def generar_codigo_route():
     data = request.get_json()
@@ -57,8 +53,7 @@ def generar_codigo_route():
 
     return jsonify({'msg': 'Código generado', 'codigo': codigo})
 
-# -------------------------------
-# Validar código
+
 @app.route('/validar_codigo', methods=['POST'])
 def validar_codigo_route():
     data = request.get_json()
