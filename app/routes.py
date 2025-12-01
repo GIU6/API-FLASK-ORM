@@ -1,7 +1,16 @@
 from flask import request, jsonify
 from . import app, db
 from .models import Cliente
-from .utils import generar_codigo
+import random
+
+
+def generar_codigo():
+    return str(random.randint(1000, 9999))
+
+
+@app.route('/')
+def index():
+    return "API REST /register, /login, /generar_codigo, /validar_codigo"
 
 
 @app.route('/register', methods=['POST'])
@@ -11,19 +20,13 @@ def register():
     email = data.get('email')
     password = data.get('password')
 
-    if not nombre or not email or not password:
-        return jsonify({'msg': 'Faltan datos'}), 400
-
-  
     if Cliente.query.filter_by(email=email).first():
         return jsonify({'msg': 'Email ya registrado'}), 400
-
 
     cliente = Cliente(nombre=nombre, email=email, password=password)
     db.session.add(cliente)
     db.session.commit()
-
-    return jsonify({'msg': 'Cliente registrado'}), 201
+    return jsonify({'msg': 'Cliente registrado'})
 
 
 @app.route('/login', methods=['POST'])
@@ -35,11 +38,11 @@ def login():
     cliente = Cliente.query.filter_by(email=email).first()
     if not cliente or cliente.password != password:
         return jsonify({'msg': 'Credenciales incorrectas'}), 401
-
     return jsonify({'msg': f'Bienvenido {cliente.nombre}'})
 
+
 @app.route('/generar_codigo', methods=['POST'])
-def generar_codigo_route():
+def codigo():
     data = request.get_json()
     email = data.get('email')
 
@@ -47,15 +50,13 @@ def generar_codigo_route():
     if not cliente:
         return jsonify({'msg': 'Cliente no encontrado'}), 404
 
-    codigo = generar_codigo()
-    cliente.codigo_verificacion = codigo
+    cliente.codigo = generar_codigo()
     db.session.commit()
-
-    return jsonify({'msg': 'Código generado', 'codigo': codigo})
+    return jsonify({'msg': 'Código generado', 'codigo': cliente.codigo})
 
 
 @app.route('/validar_codigo', methods=['POST'])
-def validar_codigo_route():
+def validar():
     data = request.get_json()
     email = data.get('email')
     codigo = data.get('codigo')
@@ -64,6 +65,6 @@ def validar_codigo_route():
     if not cliente:
         return jsonify({'msg': 'Cliente no encontrado'}), 404
 
-    if cliente.codigo_verificacion == codigo:
+    if cliente.codigo == codigo:
         return jsonify({'msg': 'Código válido'})
     return jsonify({'msg': 'Código inválido'}), 400
